@@ -38,6 +38,7 @@ export const Instructions = class extends Phaser.Scene {
   }
 
   preload() {
+    this.load.audio('stone_button_press', 'sounds/3_stonesound.mp3')
     this.load.image('grid', 'shapes/128.png')
     this.load.image('text_bg', 'shapes/145.png')
     this.load.image('game_button', 'shapes/148.png')
@@ -47,6 +48,7 @@ export const Instructions = class extends Phaser.Scene {
 
   create () {
     let page = 1
+    const stoneButtonPressAudio = this.sound.add('stone_button_press')
     this.add.image(this.game.config.width*.5, 0, 'grid').setOrigin(0.5, 0)
     this.add.image(this.game.config.width*.5, this.game.config.height*.1, 'text_bg').setOrigin(0.5, 0)
     const instructions = this.add.text(this.game.config.width*.5, this.game.config.height*.12, instructions_text_1,
@@ -67,6 +69,7 @@ export const Instructions = class extends Phaser.Scene {
         })
         .on('pointerup', function() {
           this.setTexture('game_button_hover')
+          stoneButtonPressAudio.play()
           switch(page) {
             case 1:
               this.scene.scene.start('Menu')
@@ -96,6 +99,7 @@ export const Instructions = class extends Phaser.Scene {
           this.setTexture('game_button_active')
         })
         .on('pointerup', function() {
+          stoneButtonPressAudio.play()
           instructions.setText(instructions_text_2)
           nextButton.setVisible(false)
           page = 2
