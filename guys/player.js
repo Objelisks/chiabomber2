@@ -3,13 +3,14 @@ import { WaterBalloon } from './balloon'
 import { PlayerMine } from './mine'
 import { nearestGridX, nearestGridY, distance } from '../util'
 
+// player is slightly faster than bombers, slower than mud
 const MOVE_SPEED = 0.2
-const HIT_DISTANCE = 10
 
 export const Player = class extends Phaser.GameObjects.Sprite {
   constructor(scene, x, y) {
     super(scene, x, y, 'geoffrey_up')
 
+    this.depth = 10
     scene.add.existing(this)
 
     this.isAlive = true
@@ -25,10 +26,18 @@ export const Player = class extends Phaser.GameObjects.Sprite {
     this.m = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.M)
   }
 
+  destroy(fromScene) {
+    super.destroy(fromScene)
+
+    this.myBalloon?.destroy(fromScene)
+  }
+
   hit() {
     if(this.defeated || this.scene.pause) {
       return
     }
+    
+    // we've been hit by something and we're very fragile
     this.defeated = true
     this.scene.tweens.add({
       targets: this,
@@ -36,6 +45,7 @@ export const Player = class extends Phaser.GameObjects.Sprite {
       scale: 0.1,
       duration: 500,
       onComplete: () => {
+        // lose screen after spinning
         this.scene.levelLose()
       }
     })
@@ -89,7 +99,10 @@ export const Player = class extends Phaser.GameObjects.Sprite {
       this.setTexture('geoffrey_down')
       this.facing = DIRECTIONS.DOWN
     }
+
+    // fire balloon as fast as possible, but only one at a time
     if(this.space.isDown && this.myBalloon === null) {
+      this.scene.sound.play('bazooka')
       this.myBalloon = new WaterBalloon(this.scene, this.x, this.y, this.facing)
         .on('destroy', () => {
           this.myBalloon = null
@@ -101,6 +114,7 @@ export const Player = class extends Phaser.GameObjects.Sprite {
       const newMine = new PlayerMine(this.scene, this.x, this.y)
       this.scene.updateMines(this.scene.mines-1)
       this.scene.mineObjs.push(newMine)
+      // maximum one mine per half second
       this.mineCooldown = 0.5
     }
   }

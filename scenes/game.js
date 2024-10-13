@@ -1,9 +1,10 @@
-import { pick } from "../util"
+import { pick, nearestGridY, nearestGridX } from "../util"
 import {GRID_TILE_WIDTH, GRID_TILE_HEIGHT, GRID_WIDTH, GRID_HEIGHT, GRID_TOP, GRID_LEFT, ROCK_OFFSET} from '../constants'
 import { Player } from "../guys/player"
 import { Enemy } from "../guys/enemy"
 
 const levels = [
+  {'Green': 1, 'Blue': 0, 'Yellow': 0, 'Red': 0, 'Black': 0}, // 0
   {'Green': 8, 'Blue': 0, 'Yellow': 0, 'Red': 0, 'Black': 0}, // 1
   {'Green': 7, 'Blue': 1, 'Yellow': 0, 'Red': 0, 'Black': 0}, // 2
   {'Green': 6, 'Blue': 2, 'Yellow': 0, 'Red': 0, 'Black': 0}, // 3
@@ -73,11 +74,20 @@ export const Game = class extends Phaser.Scene {
 
     this.typed = []
     this.codeUsed = false
-    this.topStart = false
+    this.startPos = {
+      x: GRID_LEFT,
+      y: GRID_TOP + GRID_HEIGHT
+    }
   }
 
   preload() {
     this.load.audio('stone_button_press', 'sounds/3_stonesound.mp3')
+    this.load.audio('water_balloon', 'sounds/2_waterballoon.mp3')
+    this.load.audio('bazooka', 'sounds/8_bazooka.mp3')
+    this.load.audio('mine_explosion', 'sounds/7_minesound.mp3')
+    this.load.audio('collision', 'sounds/10_collisionsound.mp3')
+    this.load.audio('complete', 'sounds/9_completesound.mp3')
+    this.load.audio('popup', 'sounds/5_popupsound.mp3')
 
     this.load.image('game_bg', 'shapes/167.png')
     this.load.image('game_grid', 'shapes/169.png')
@@ -134,12 +144,13 @@ export const Game = class extends Phaser.Scene {
       })
     })
 
+    this.up = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.UP)
+    this.down = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN)
+    this.left = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT)
     this.right = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT)
   }
 
   create () {
-    const stoneButtonPressAudio = this.sound.add('stone_button_press')
-
     Object.keys(animations).forEach(key => {
       const frames = animations[key].map((frame, index) => ({key: `${key}${index}` }))
       this.anims.create({
@@ -209,13 +220,15 @@ export const Game = class extends Phaser.Scene {
           this.setTexture('game_button_active')
         })
         .on('pointerup', function() {
-          stoneButtonPressAudio.play()
+          this.sound.play('stone_button_press')
           this.scoreScreen()
         }.bind(this)),
       this.add.text(this.game.config.width*.77, this.game.config.height*.90, 'End Game',
         {fontFamily:'geoffrey', fontSize: 18, color: '#FFCB98'})
     ])
 
+    // secret cheat code!!!
+    // one time use: type "geoffrey" to get an extra life
     this.input.keyboard.on('keydown', (e) => {
       if(this.codeUsed) {
         return
@@ -227,17 +240,19 @@ export const Game = class extends Phaser.Scene {
         if('geoffrey' === this.typed.join('')) {
           this.codeUsed = true
           this.updateLives(++this.lives)
+          this.sound.play('complete')
         }
       }
     })
 
-    this.baseLevel = this.add.group([...this.children.list])
+    this.baseLevel = [...this.children.list]
 
     this.setupLevel(0)
   }
 
   levelWin() {
     this.pause = true
+    this.sound.play('popup')
     this.level++
     if(this.level > levels.length) {
       this.gameWin()
@@ -263,17 +278,27 @@ export const Game = class extends Phaser.Scene {
         {fontFamily: 'geoffrey', fontSize: 20, color: '#FFF', align: 'center', lineSpacing: 5})
         .setOrigin(0.5, 0),
     ])
+    modalGroup.setDepth(100)
     this.input.keyboard.once('keydown-SPACE', () => {
       modalGroup.destroy(true, true)
-      if(this.player.y === GRID_TOP && this.right.isDown) {
-        this.topStart = true
+
+      // this is a reproduction of a weird (unintentional?) bug in the original game
+      // if you are holding a direction and on a grid line aligned with that direction, you
+      // start the next level on that line
+      this.startPos = { x: GRID_LEFT, y: GRID_TOP + GRID_HEIGHT }
+      if((this.up.isDown || this.down.isDown) && nearestGridX(this.player.x)+GRID_LEFT === this.player.x) {
+        this.startPos.x = this.player.x
+      } else if((this.right.isDown || this.left.isDown) && nearestGridY(this.player.y)+GRID_TOP === this.player.y) {
+        this.startPos.y = this.player.y
       }
+      
       this.setupLevel(this.level)
     })
   }
 
   levelLose() {
     this.pause = true
+    this.sound.play('popup')
     this.updateLives(this.lives - 1)
     if(this.lives === 0) {
       this.scoreScreen()
@@ -300,6 +325,7 @@ export const Game = class extends Phaser.Scene {
         {fontFamily: 'geoffrey', fontSize: 20, color: '#FFF', align: 'center', lineSpacing: 5})
         .setOrigin(0.5, 0),
     ])
+    modalGroup.setDepth(100)
     this.input.keyboard.once('keydown-SPACE', () => {
       modalGroup.destroy(true, true)
       this.setupLevel(this.level)
@@ -308,6 +334,7 @@ export const Game = class extends Phaser.Scene {
 
   gameWin() {
     this.pause = true
+    this.sound.play('complete')
 
     const modalGroup = this.add.group([
       this.add.image(this.game.config.width*.5, 0, 'modal_bg')
@@ -327,6 +354,7 @@ export const Game = class extends Phaser.Scene {
         {fontFamily: 'geoffrey', fontSize: 20, color: '#FFF', align: 'center', lineSpacing: 5})
         .setOrigin(0.5, 0),
     ])
+    modalGroup.setDepth(100)
     this.input.keyboard.once('keydown-SPACE', () => {
       modalGroup.destroy(true, true)
       this.scoreScreen()
@@ -408,6 +436,7 @@ export const Game = class extends Phaser.Scene {
       this.add.image(this.game.config.width*.755, this.game.config.height*.74, 'restart_icon')
         .setScale(0.35, 0.35),
     ])
+    modalGroup.setDepth(100)
   }
 
   setupLevel(level) {
@@ -415,11 +444,16 @@ export const Game = class extends Phaser.Scene {
     this.levelStartScore = this.score
     this.levelStartBalloonKills = this.balloonKills
     this.levelStartMineKills = this.mineKills
+
+    // cleanup
+    for(const child of [...this.children.list]) {
+      if(!this.baseLevel.includes(child)) {
+        child.destroy(true)
+      }
+    }
     
-    this.mineObjs.forEach(mine => mine.destroy())
     this.mineObjs = []
 
-    this.rocks.forEach(rock => rock.destroy())
     this.rocks = []
     for(let x = 0; x<8; x++) {
       for(let y=0; y<6; y++) {
@@ -434,7 +468,6 @@ export const Game = class extends Phaser.Scene {
     }
 
     const enemyCounts = levels[level]
-    this.enemies.forEach(enemy => enemy.destroy())
     this.enemies = []
     Object.keys(enemyCounts).forEach(rank => {
       for(let i=0; i<enemyCounts[rank]; i++) {
@@ -451,11 +484,6 @@ export const Game = class extends Phaser.Scene {
       }
     })
 
-    if(this.player) {
-      this.player.destroy()
-    }
-    this.player = new Player(this, GRID_LEFT, this.topStart ? GRID_TOP : GRID_TOP + GRID_HEIGHT)
-
-    this.topStart = false
+    this.player = new Player(this, this.startPos.x, this.startPos.y)
   }
 }

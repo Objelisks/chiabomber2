@@ -48,7 +48,6 @@ export const Instructions = class extends Phaser.Scene {
 
   create () {
     let page = 1
-    const stoneButtonPressAudio = this.sound.add('stone_button_press')
     this.add.image(this.game.config.width*.5, 0, 'grid').setOrigin(0.5, 0)
     this.add.image(this.game.config.width*.5, this.game.config.height*.1, 'text_bg').setOrigin(0.5, 0)
     const instructions = this.add.text(this.game.config.width*.5, this.game.config.height*.12, instructions_text_1,
@@ -69,7 +68,7 @@ export const Instructions = class extends Phaser.Scene {
         })
         .on('pointerup', function() {
           this.setTexture('game_button_hover')
-          stoneButtonPressAudio.play()
+          this.scene.sound.play('stone_button_press')
           switch(page) {
             case 1:
               this.scene.scene.start('Menu')
@@ -99,11 +98,11 @@ export const Instructions = class extends Phaser.Scene {
           this.setTexture('game_button_active')
         })
         .on('pointerup', function() {
-          stoneButtonPressAudio.play()
+          this.sound.play('stone_button_press')
           instructions.setText(instructions_text_2)
           nextButton.setVisible(false)
           page = 2
-        }),
+        }.bind(this)),
       this.add.text(this.game.config.width*.76, this.game.config.height*.88, 'Next',
         {fontFamily:'geoffrey', fontSize: 18, color: '#FFCB98'})
       ])
