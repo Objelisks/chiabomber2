@@ -38,12 +38,6 @@ export const Instructions = class extends Phaser.Scene {
   }
 
   preload() {
-    this.load.audio('stone_button_press', 'sounds/3_stonesound.mp3')
-    this.load.image('grid', 'shapes/128.png')
-    this.load.image('text_bg', 'shapes/145.png')
-    this.load.image('game_button', 'shapes/148.png')
-    this.load.image('game_button_hover', 'shapes/150.png')
-    this.load.image('game_button_active', 'shapes/152.png')
   }
 
   create () {

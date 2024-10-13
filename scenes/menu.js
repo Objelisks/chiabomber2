@@ -5,13 +5,6 @@ export const Menu = class extends Phaser.Scene {
   }
 
   preload() {
-    this.load.audio('button_press', 'sounds/11_woodclick.mp3')
-    this.load.image('grid', 'shapes/128.png')
-    this.load.image('logo_bg', 'shapes/130.png')
-    this.load.image('logo', 'shapes/131.png')
-    this.load.image('logo_geoffrey', 'shapes/133.png')
-    this.load.image('button', 'shapes/134.png')
-    this.load.image('button_hover', 'shapes/137.png')
   }
 
   create () {

@@ -11,6 +11,21 @@ export const FACING_ANGLES = {
   [DIRECTIONS.RIGHT]: 0,
 }
 
+export const ANIMATIONS = {
+  'explosion': [13, 14, 15],
+  'mudExplosion': [18, 19, 20],
+  'waterExplosion': [25, 26, 27],
+  'mineExplosion': [29, 30, 31]
+}
+
+export const ROCKS = [
+  [57, 59, 61],
+  [51, 53, 55],
+  [45, 47, 49],
+  [39, 41, 43],
+  [33, 35, 37]
+]
+
 export const GRID_TILE_WIDTH = 66.666
 export const GRID_TILE_HEIGHT = 66.666
 export const GRID_WIDTH = 533.333
