@@ -4,7 +4,6 @@ import { Player } from "../guys/player"
 import { Enemy } from "../guys/enemy"
 
 const levels = [
-  {'Green': 1, 'Blue': 0, 'Yellow': 0, 'Red': 0, 'Black': 0}, // 0
   {'Green': 8, 'Blue': 0, 'Yellow': 0, 'Red': 0, 'Black': 0}, // 1
   {'Green': 7, 'Blue': 1, 'Yellow': 0, 'Red': 0, 'Black': 0}, // 2
   {'Green': 6, 'Blue': 2, 'Yellow': 0, 'Red': 0, 'Black': 0}, // 3

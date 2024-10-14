@@ -14,6 +14,11 @@ export const Preload = class extends Phaser.Scene {
   }
 
   preload() {
+    const geoffreyFont = new FontFace('geoffrey', `url(./fonts/Geoffrey.ttf)`)
+    geoffreyFont.load().then(function (loaded) {
+        document.fonts.add(loaded)
+    })
+
     // menu
     this.load.audio('button_press', 'sounds/11_woodclick.mp3')
     this.load.image('grid', 'shapes/128.png')
